@@ -290,7 +290,8 @@
   </div>
 
   <div class="panel">
-    <h2>Nueva solicitud</h2>
+  <h2>Nueva solicitud</h2>
+  <form id="formSolicitudViaje" action="TU_URL_DE_WEBHOOK_ZAPIER" method="POST">
 
     <div class="transport-toggle" id="transportToggle">
       <label id="labelDAE" class="active">
@@ -347,7 +348,7 @@
 
     <div class="field full">
       <label for="motivoDetalle">Detalle del motivo (opcional)</label>
-      <textarea id="motivoDetalle" placeholder="Ej: Recolección de muestra biológica para envío a Foundation Medicine"></textarea>
+      <textarea id="motivoDetalle" placeholder="Ej: Recolección de muestra biológica para envío a proveedor externo"></textarea>
     </div>
 
     <div class="grid">
@@ -410,8 +411,8 @@
       <label for="comentarios">Requerimientos especiales / comentarios</label>
       <textarea id="comentarios" placeholder="Ej: Muestra requiere cadena de frío, contactar antes de llegar, acceso por estacionamiento subterráneo, etc."></textarea>
     </div>
-
-    <div class="actions">
+</form>
+  <div class="actions">
       <span class="hint">Cada envío (email o WhatsApp) queda guardado como una solicitud en la tabla de abajo.</span>
       <button class="btn-ghost" id="btnLimpiar" type="button">Limpiar</button>
       <button class="btn-whatsapp" id="btnWhatsapp" type="button">Enviar por WhatsApp</button>
