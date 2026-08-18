@@ -467,7 +467,7 @@ let pacientesSeleccionados = []; // {name, taskId}
 const emailField = document.getElementById('emailDestino');
 const phoneField = document.getElementById('telefonoDestino');
 const defaultEmails = {
-  'DAE Transportes': 'daniela.alfonso.espinosa@gmail.com',
+  'DAE Transportes': 'dae.transportes1@gmail.com',
   'Loimex': 'osvaldo.castillo@loimex.cl'
 };
 const defaultPhones = {
@@ -967,9 +967,16 @@ document.getElementById('btnEnviar').addEventListener('click', async ()=>{
   if(!validarBase(f)) return;
   if(!f.destinoEmail){ showToast('Ingresa el email de destino.'); return; }
   const rec = await crearRegistro(f, 'Email');
+  
+  // Correo de logística a donde llegará la copia (CC)
+  const ccEmail = 'logistica.cl@nomadgenetics.com'; 
+  
   const subject = encodeURIComponent(`Solicitud de viaje — ${rec.transportista} — ${rec.fechaViaje} ${rec.horaViaje}`);
   const body = encodeURIComponent(buildMessageText(rec));
-  window.location.href = `mailto:${encodeURIComponent(f.destinoEmail)}?subject=${subject}&body=${body}`;
+  
+  // Se añade &cc= con el correo de logística
+  window.location.href = `mailto:${encodeURIComponent(f.destinoEmail)}?cc=${encodeURIComponent(ccEmail)}&subject=${subject}&body=${body}`;
+  
   showToast('Solicitud guardada en el registro y correo generado.');
 });
 
