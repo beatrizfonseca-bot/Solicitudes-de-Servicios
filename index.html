@@ -309,11 +309,11 @@
     <div class="grid">
       <div class="field">
         <label for="emailDestino">Email de destino</label>
-        <input type="email" id="emailDestino" placeholder="contacto@transportista.cl">
+        <input type="email" id="emailDestino" name="email de destino" placeholder="contacto@transportista.cl">
       </div>
       <div class="field">
         <label for="telefonoDestino">WhatsApp de destino (con código país)</label>
-        <input type="tel" id="telefonoDestino" placeholder="+56912345678">
+        <input type="tel" id="telefonoDestino" name="Telefono de destino" placeholder="+56912345678">
       </div>
       <div class="field">
         <label for="fechaSolicitud">Fecha de solicitud</label>
@@ -321,7 +321,7 @@
       </div>
       <div class="field">
         <label for="solicitante">Solicitado por</label>
-        <input type="text" id="solicitante" placeholder="Tu nombre">
+        <input type="text" id="solicitante" name="solicitante" placeholder="Tu nombre">
       </div>
     </div>
 
@@ -355,12 +355,12 @@
       <div class="field">
         <label for="origenSelect">Origen</label>
         <select id="origenSelect"></select>
-        <input type="text" class="otro-input" id="origenOtro" placeholder="Especificar origen" style="display:none;">
+        <input type="text" class="otro-input" id="origenOtro" name="Otro origen"placeholder="Especificar origen" style="display:none;">
       </div>
       <div class="field">
         <label for="destinoSelect">Destino</label>
         <select id="destinoSelect"></select>
-        <input type="text" class="otro-input" id="destinoOtro" placeholder="Especificar destino" style="display:none;">
+        <input type="text" class="otro-input" id="destinoOtro" name="Otro" placeholder="Especificar destino" style="display:none;">
       </div>
     </div>
 
@@ -388,13 +388,13 @@
       <div class="pat-selected" id="patSelected"></div>
       <div class="field">
         <label for="patSearch">Buscar paciente (nombre o Task ID — lista ClickUp)</label>
-        <input type="text" id="patSearch" placeholder="Escribe para buscar…">
+        <input type="text" id="patSearch" name="Nombre o ID" placeholder="Escribe para buscar…">
         <div class="pat-list" id="patList"></div>
       </div>
       <div class="field">
         <label for="patManual">Agregar paciente no listado en ClickUp</label>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="patManual" placeholder="Nombre completo del paciente" style="flex:1;">
+          <input type="text" id="patManual" name="Paciente" placeholder="Nombre completo del paciente" style="flex:1;">
           <button class="btn-tiny" id="btnAddPatManual" type="button">Agregar</button>
         </div>
       </div>
@@ -402,14 +402,14 @@
 
     <div class="grid">
       <div class="field">
-        <label for="valor">Valor del servicio (CLP)</label>
-        <input type="number" id="valor" placeholder="Ej: 8500">
+        <label for="valor">Precio del servicio (CLP)</label>
+        <input type="number" id="valor" name="precio" placeholder="Ej: 8500">
       </div>
     </div>
 
     <div class="field full">
       <label for="comentarios">Requerimientos especiales / comentarios</label>
-      <textarea id="comentarios" placeholder="Ej: Muestra requiere cadena de frío, contactar antes de llegar, acceso por estacionamiento subterráneo, etc."></textarea>
+      <textarea id="comentarios" name="comentarios" placeholder="Ej: Muestra requiere cadena de frío, contactar antes de llegar, acceso por estacionamiento subterráneo, etc."></textarea>
     </div>
 </form>
   <div class="actions">
