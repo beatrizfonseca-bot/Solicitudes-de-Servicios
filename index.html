@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Solicitud de Viajes — DAE / Loimex</title>
+<style>
+  :root{
+    --ink:#12232b; --paper:#f6f4ee; --line:#d8d2c2; --teal:#1f5f5b; --teal-dark:#143f3c;
+    --clay:#b3542f; --ok:#2f7a4f; --pending:#a8791b; --accepted:#2c6ba8; --cancelled:#a13d3d;
+    --panel:#ffffff; --muted:#6b6656; --whatsapp:#25923a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Segoe UI', system-ui, -apple-system, sans-serif;padding:28px 18px 60px;}
+  .wrap{max-width:1120px;margin:0 auto;}
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--ink);padding-bottom:12px;margin-bottom:26px;gap:16px;flex-wrap:wrap;}
+  .masthead h1{font-family:Georgia, 'Times New Roman', serif;font-size:28px;margin:0;letter-spacing:0.2px;}
+  .masthead .sub{color:var(--muted);font-size:13px;margin-top:4px;}
+  .badge-row{display:flex;gap:8px;}
+  .badge{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;padding:5px 10px;border:1px solid var(--ink);border-radius:2px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:22px;margin-bottom:24px;}
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--teal-dark);margin:0 0 18px 0;display:flex;align-items:center;gap:10px;}
+  .panel h2::after{content:"";flex:1;height:1px;background:var(--line);}
+  .transport-toggle{display:flex;gap:10px;margin-bottom:20px;}
+  .transport-toggle label{flex:1;border:1.5px solid var(--line);border-radius:4px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:border-color .15s, background .15s;}
+  .transport-toggle input{position:absolute;opacity:0;pointer-events:none;}
+  .transport-toggle label span.name{font-weight:600;font-size:14.5px;}
+  .transport-toggle label span.mail{font-size:12px;color:var(--muted);}
+  .transport-toggle label.active{border-color:var(--teal);background:#f0f5f2;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;position:relative;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-size:12px;font-weight:600;color:var(--teal-dark);text-transform:uppercase;letter-spacing:0.4px;}
+  .field input[type=text], .field input[type=date], .field input[type=time], .field input[type=number], .field input[type=email], .field input[type=tel], .field select, .field textarea{
+    border:1px solid var(--line);border-radius:3px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fffdf9;color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:52px;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .field .help{font-size:11.5px;color:var(--muted);}
+  .checkline{display:flex;align-items:center;gap:8px;margin:2px 0 14px;font-size:13.5px;}
+  .checkline input{width:16px;height:16px;}
+  #pacienteBlock, #tramoLCField, #daeSurcharges{display:none;}
+  .otro-input{display:none;margin-top:8px;}
+  .tarifa-box{background:#f4f7f5;border:1px dashed var(--line);border-radius:4px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--muted);}
+  .tarifa-box .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .btn-tiny{font-size:11.5px;padding:5px 10px;border-radius:3px;background:#eef3f1;border:1px solid var(--teal);color:var(--teal-dark);cursor:pointer;font-family:inherit;font-weight:600;}
+  .btn-tiny:hover{background:var(--teal);color:#fff;}
+  .btn-tiny:disabled{opacity:0.4;cursor:not-allowed;}
+  .surcharge-row{display:none;gap:20px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+  .surcharge-row .checkline{margin:0;}
+  .recargo-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  /* patient picker */
+  .pat-selected{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+  .pat-chip{background:#eef3f1;border:1px solid var(--teal);color:var(--teal-dark);font-size:12px;padding:4px 8px 4px 10px;border-radius:20px;display:flex;align-items:center;gap:6px;}
+  .pat-chip button{background:none;border:none;color:var(--teal-dark);font-size:13px;padding:0;line-height:1;cursor:pointer;}
+  .pat-list{max-height:190px;overflow-y:auto;border:1px solid var(--line);border-radius:3px;background:#fffdf9;margin-top:6px;display:none;}
+  .pat-item{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:13px;border-bottom:1px solid #f0ede2;cursor:pointer;}
+  .pat-item:last-child{border-bottom:none;}
+  .pat-item:hover{background:#f4f2e9;}
+  .pat-item .tid{color:var(--muted);font-size:11.5px;margin-left:auto;}
+  .pat-empty{padding:10px;font-size:12.5px;color:var(--muted);}
+  .snapshot-note{font-size:11.5px;color:var(--muted);margin-top:8px;}
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;align-items:center;flex-wrap:wrap;}
+  .hint{font-size:12px;color:var(--muted);margin-right:auto;}
+  button{font-family:inherit;font-size:13.5px;font-weight:600;border-radius:3px;padding:11px 20px;cursor:pointer;border:none;}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-whatsapp{background:var(--whatsapp);color:#fff;}
+  .btn-whatsapp:hover{background:#1c7a2d;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--muted);border-bottom:2px solid var(--ink);padding:8px 7px;white-space:nowrap;}
+  tbody td{padding:9px 7px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tbody tr:hover{background:#faf8f2;}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.3px;white-space:nowrap;}
+  .pill.pending{background:#f5e6c8;color:var(--pending);}
+  .pill.accepted{background:#dae7f2;color:var(--accepted);}
+  .pill.done{background:#dcefe0;color:var(--ok);}
+  .pill.cancelled{background:#f3dcdc;color:var(--cancelled);}
+  .pill.dae{background:#e4edea;color:var(--teal-dark);}
+  .pill.loimex{background:#f2e2d8;color:var(--clay);}
+  .pill.canal-email{background:#eaeaea;color:#444;}
+  .pill.canal-whatsapp{background:#dff2e1;color:var(--whatsapp);}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .row-actions button{padding:5px 9px;font-size:11.5px;border-radius:3px;}
+  .empty{text-align:center;padding:36px 10px;color:var(--muted);font-size:13.5px;}
+  .table-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .table-head-row .count{font-size:12px;color:var(--muted);}
+  .table-scroll{overflow-x:auto;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--teal-dark);color:#fff;padding:11px 20px;border-radius:4px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  details.ref{border:1px solid var(--line);border-radius:4px;padding:12px 16px;background:#fbfaf6;margin-bottom:24px;}
+  details.ref summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--teal-dark);}
+  .ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:14px;}
+  .ref-grid table{font-size:12.5px;}
+  .ref-grid th, .ref-grid td{padding:5px 6px;}
+  .ref-grid caption{text-align:left;font-weight:700;font-size:12.5px;margin-bottom:6px;color:var(--ink);}
+  .ref-notes{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  @media (max-width:640px){ .grid, .grid3, .ref-grid{grid-template-columns:1fr;} .transport-toggle{flex-direction:column;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <h1>Solicitud de Viajes de Transporte</h1>
+      <div class="sub">Coordinación de recolección / entrega — DAE Transportes y Loimex</div>
+    </div>
+    <div class="badge-row"><span class="badge">Nomad Genetics</span></div>
+  </div>
+
+  <details class="ref">
+    <summary>Ver tarifas de referencia (DAE y Loimex)</summary>
+    <div class="ref-grid">
+      <table>
+        <caption>DAE Transportes (Daniela Alfonso)</caption>
+        <tbody>
+          <tr><td>Histopatología Citolab</td><td>$5.000</td></tr>
+          <tr><td>Clínica Santa María</td><td>$7.000</td></tr>
+          <tr><td>Clínica Alemana</td><td>$7.000</td></tr>
+          <tr><td>Clínica Dávila</td><td>$8.500</td></tr>
+          <tr><td>Clínica Las Condes</td><td>$8.500</td></tr>
+          <tr><td>Clínica Los Andes</td><td>$10.000</td></tr>
+          <tr><td>Sucursal FedEx (Providencia)</td><td>$5.000</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <caption>Loimex (tarifas 2026, por comuna/tramo)</caption>
+        <tbody>
+          <tr><td>Providencia</td><td>$8.500</td></tr>
+          <tr><td>Vitacura</td><td>$8.500</td></tr>
+          <tr><td>Pedro Aguirre Cerda</td><td>$12.000</td></tr>
+          <tr><td>Las Condes — hasta Manquehue</td><td>$8.000</td></tr>
+          <tr><td>Las Condes — Manquehue a Padre Hurtado</td><td>$9.000</td></tr>
+          <tr><td>Las Condes — Padre Hurtado al oriente</td><td>$10.000</td></tr>
+          <tr><td>Santiago</td><td>$10.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ref-notes">
+      Ambos proveedores cobran <strong>$100 por minuto de espera</strong> adicional. DAE además recarga <strong>+$1.000</strong> por servicio en fin de semana y <strong>+$2.000</strong> por gestión previa de poder simple. DAE requiere coordinación con al menos 1 día hábil de anticipación y confirma cada entrega con foto de recepción.
+    </div>
+  </details>
+
+  <div class="panel">
+    <h2>Nueva solicitud</h2>
+
+    <div class="transport-toggle" id="transportToggle">
+      <label id="labelDAE" class="active">
+        <input type="radio" name="transportista" value="DAE Transportes" checked>
+        <span class="name">DAE Transportes</span>
+        <span class="mail" id="mailDAEDisplay">dae.transportes1@gmail.com</span>
+      </label>
+      <label id="labelLoimex">
+        <input type="radio" name="transportista" value="Loimex">
+        <span class="name">Loimex</span>
+        <span class="mail" id="mailLoimexDisplay">osvaldo.castillo@loimex.cl</span>
+      </label>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="emailDestino">Email de destino</label>
+        <input type="email" id="emailDestino" placeholder="contacto@transportista.cl">
+      </div>
+      <div class="field">
+        <label for="telefonoDestino">WhatsApp de destino (con código país)</label>
+        <input type="tel" id="telefonoDestino" placeholder="+56912345678">
+      </div>
+    </div>
+
+    <div class="checkline">
+      <input type="checkbox" id="incluirCC" checked>
+      <label for="incluirCC" style="text-transform:none;font-weight:500;letter-spacing:0;">Incluir copia (CC) al enviar por email</label>
+    </div>
+    <div class="field" id="ccField" style="max-width:360px;">
+      <label for="ccEmail">Email en copia (CC)</label>
+      <input type="email" id="ccEmail" value="logistica.cl@nomadgenetics.com">
+      <span class="help">Verifica que esta sea la casilla correcta antes de usarla — la dejé precargada, pero no está confirmada.</span>
+    </div>
+
+    <div class="grid3">
+      <div class="field">
+        <label for="fechaSolicitud">Fecha de solicitud</label>
+        <input type="date" id="fechaSolicitud">
+      </div>
+      <div class="field">
+        <label for="fechaViaje">Fecha planificada del viaje</label>
+        <input type="date" id="fechaViaje">
+      </div>
+      <div class="field">
+        <label for="horaViaje">Horario planificado</label>
+        <input type="time" id="horaViaje">
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="motivoSelect">Motivo del viaje</label>
+        <select id="motivoSelect">
+          <option value="Recolección de muestra">Recolección de muestra</option>
+          <option value="Entrega de muestra en laboratorio">Entrega de muestra en laboratorio</option>
+          <option value="Entrega de kit / insumos">Entrega de kit / insumos</option>
+          <option value="Retiro de informe / documentación">Retiro de informe / documentación</option>
+          <option value="Otro">Otro (especificar abajo)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="solicitante">Solicitado por</label>
+        <input type="text" id="solicitante" placeholder="Tu nombre">
+      </div>
+    </div>
+
+    <div class="field full">
+      <label for="motivoDetalle">Detalle del motivo (opcional)</label>
+      <textarea id="motivoDetalle" placeholder="Ej: Recolección de muestra biológica para envío a laboratorio Foundation Medicine"></textarea>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="origenSelect">Origen</label>
+        <select id="origenSelect"></select>
+        <input type="text" class="otro-input" id="origenOtro" placeholder="Especifica el origen">
+      </div>
+      <div class="field">
+        <label for="destinoSelect">Destino</label>
+        <select id="destinoSelect"></select>
+        <input type="text" class="otro-input" id="destinoOtro" placeholder="Especifica el destino">
+      </div>
+    </div>
+
+    <div class="field" id="tramoLCField" style="max-width:360px;">
+      <label for="zonaLasCondes">Zona Las Condes (referencia tarifa Loimex)</label>
+      <select id="zonaLasCondes">
+        <option value="">Seleccionar zona…</option>
+        <option value="Hasta Manquehue">Hasta Manquehue — $8.000</option>
+        <option value="Manquehue a Padre Hurtado">Manquehue a Padre Hurtado — $9.000</option>
+        <option value="Padre Hurtado al oriente">Padre Hurtado al oriente — $10.000</option>
+      </select>
+    </div>
+
+    <div class="tarifa-box">
+      Tarifas de referencia para este trayecto (haz clic para aplicar el valor y el transportista):
+      <div class="chips" id="tarifaChips"></div>
+    </div>
+
+    <div class="checkline">
+      <input type="checkbox" id="aplicaPaciente">
+      <label for="aplicaPaciente" style="text-transform:none;font-weight:500;letter-spacing:0;">Este viaje corresponde a una muestra/gestión asociada a uno o más pacientes</label>
+    </div>
+
+    <div id="pacienteBlock">
+      <div class="pat-selected" id="patSelected"></div>
+      <div class="field">
+        <label for="patSearch">Buscar paciente (nombre — lista ClickUp "Ingreso pacientes")</label>
+        <input type="text" id="patSearch" placeholder="Escribe para buscar…">
+        <div class="pat-list" id="patList"></div>
+      </div>
+      <div class="field">
+        <label for="patManual" style="text-transform:none;font-weight:500;">Agregar paciente no listado</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="patManual" placeholder="Nombre completo del paciente" style="flex:1;">
+          <button class="btn-tiny" id="btnAddPatManual" type="button">Agregar</button>
+        </div>
+      </div>
+      <div class="snapshot-note">Lista tomada de ClickUp ("Ingreso pacientes") — instantánea del 18-08-2026, no se actualiza sola. Si el paciente es más reciente, agrégalo manualmente arriba y pide que se refresque la lista cuando quieras.</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label for="esperaMin">Minutos de espera estimados</label>
+        <input type="number" id="esperaMin" placeholder="0" min="0">
+      </div>
+      <div class="field">
+        <label for="valor">Valor del servicio (CLP)</label>
+        <input type="number" id="valor" placeholder="Ej: 8500">
+      </div>
+    </div>
+
+    <div class="surcharge-row" id="daeSurcharges">
+      <div class="checkline">
+        <input type="checkbox" id="finDeSemana">
+        <label for="finDeSemana" style="text-transform:none;font-weight:500;letter-spacing:0;">Fin de semana (+$1.000)</label>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="poderSimple">
+        <label for="poderSimple" style="text-transform:none;font-weight:500;letter-spacing:0;">Gestión poder simple (+$2.000)</label>
+      </div>
+    </div>
+    <div class="recargo-line">
+      <span class="help" id="recargoHelp"></span>
+      <button class="btn-tiny" id="btnSumarRecargos" type="button" disabled>Sumar recargos al valor</button>
+    </div>
+
+    <div class="field full">
+      <label for="comentarios">Requerimientos especiales / comentarios</label>
+      <textarea id="comentarios" placeholder="Ej: Muestra requiere cadena de frío, contactar antes de llegar, acceso por estacionamiento subterráneo, etc."></textarea>
+    </div>
+
+    <div class="actions">
+      <span class="hint">Cada envío (email o WhatsApp) queda guardado como una solicitud en la tabla de abajo.</span>
+      <button class="btn-ghost" id="btnLimpiar" type="button">Limpiar</button>
+      <button class="btn-whatsapp" id="btnWhatsapp" type="button">Enviar por WhatsApp</button>
+      <button class="btn-primary" id="btnEnviar" type="button">Enviar por email</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="table-head-row">
+      <h2 style="margin:0;">Registro de solicitudes</h2>
+      <span class="count" id="rowCount"></span>
+    </div>
+    <div class="table-scroll">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>F. viaje</th><th>Hora</th><th>F. solicitud</th><th>Transportista</th>
+            <th>Motivo</th><th>Detalle</th><th>Origen</th><th>Destino</th>
+            <th>Paciente(s)</th><th>Valor</th><th>Comentarios</th><th>Canal</th><th>Estado</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyMsg" style="display:none;">Aún no hay solicitudes registradas. Completa el formulario de arriba para comenzar.</div>
+    </div>
+    <div class="actions" style="margin-top:14px;">
+      <span class="hint">Importa un CSV con el mismo formato que exporta esta tabla (registros históricos, por ejemplo).</span>
+      <input type="file" id="csvImportInput" accept=".csv" style="display:none;">
+      <button class="btn-ghost" id="btnCSVImport" type="button">Importar CSV</button>
+      <button class="btn-ghost" id="btnCSV" type="button">Descargar CSV</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'solicitudes-viaje-transporte';
+let registros = [];
+let pacientesSeleccionados = [];
+
+// ---------------- Contacto por transportista ----------------
+const emailField = document.getElementById('emailDestino');
+const phoneField = document.getElementById('telefonoDestino');
+const defaultEmails = { 'DAE Transportes': 'dae.transportes1@gmail.com', 'Loimex': 'osvaldo.castillo@loimex.cl' };
+const defaultPhones = { 'DAE Transportes': '+56987617224', 'Loimex': '+56973782379' };
+
+// ---------------- Ubicaciones y tarifas ----------------
+const LOCATIONS = [
+  'Clínica Las Condes','Clínica Santa María','Citolab',
+  'FedEx Providencia-Costanera','FedEx Apoquindo Los Militares',
+  'DHL Apoquindo Los Militares','Clínica MEDS','Laboratorio',
+  'Bradford Hill','Oficina/Bodega Nomad Genetics','Otro'
+];
+const DAE_PRICES = {
+  'Citolab': 5000, 'Clínica Santa María': 7000, 'Clínica Las Condes': 8500, 'FedEx Providencia-Costanera': 5000
+};
+const LOIMEX_FIXED_PRICES = { 'FedEx Providencia-Costanera': 8500, 'Clínica Santa María': 8500 };
+const LOIMEX_LC_LOCATIONS = ['Clínica Las Condes','FedEx Apoquindo Los Militares','DHL Apoquindo Los Militares','Clínica MEDS'];
+const LOIMEX_ZONE_PRICES = { 'Hasta Manquehue': 8000, 'Manquehue a Padre Hurtado': 9000, 'Padre Hurtado al oriente': 10000 };
+
+function fillLocationSelect(sel){
+  sel.innerHTML = '<option value="">Seleccionar…</option>' + LOCATIONS.map(l=>`<option value="${l}">${l}</option>`).join('');
+}
+fillLocationSelect(document.getElementById('origenSelect'));
+fillLocationSelect(document.getElementById('destinoSelect'));
+
+// ---------------- Pacientes: instantánea ClickUp "Ingreso pacientes" (18-08-2026) ----------------
+const PATIENTS_SNAPSHOT = [
+["Paz Garcia","SMPL-10163"],["Rosmarie Vogler Muller","SMPL-10391"],["Cecilia Perez Lobos","SMPL-10392"],
+["José Antonio Bascoli Acuña","SMPL-11620"],["Andres Virot","SMPL-11621"],["Claudia Ferrando","SMPL-11754"],
+["Daniela García","SMPL-11821"],["Rodrigo Rebolledo","SMPL-11823"],["Patricia Maria Cubas Rodriguez","SMPL-12207"],
+["Jorge Antognini Gomez","SMPL-12223"],["Jaime Sepulveda Urrutia","SMPL-12224"],["Diofredo Sanchez Valenzuela","SMPL-12226"],
+["Myriam Ponce Alvarado","SMPL-12296"],["Teresa Donoso Arraño","SMPL-12313"],["Teresa Donoso Arraño","SMPL-12347"],
+["Myriam Ponce Alvarado","SMPL-12371"],["Silvia Honoria Valenzuela Soto","SMPL-12391"],["Manuel Marcelo Andrade Yañez","SMPL-12448"],
+["Rosa Villablanca Cuellar","SMPL-12449"],["Regina Valdenegro Velasquez","SMPL-12464"],["Valeria Angelica Leal Alvarez","SMPL-12466"],
+["Segundo Marilao Cifuentes","SMPL-12474"],["Jorge Ibañez Garces","SMPL-12482"],["Arcelia Coromoto Segura de Mago","SMPL-12483"],
+["Samuel Ricardo Margulis Budnik","SMPL-12498"],["Rosa Villablanca Cuellar","SMPL-12513"],["Natalia Contreras Estrada","SMPL-12523"],
+["Pedro Arnoldo Carmona Pasten","SMPL-12533"],["Jorge Ibañez Garces","SMPL-12534"],["Yanet de las Mercedes Toro Machuca","SMPL-12536"],
+["Luisa Puentes Moyano","SMPL-12537"],["Modesta Vargas Baeza","SMPL-12545"],["Erika Lopez Alcayaga","SMPL-12546"],
+["Evelyn Odette Rivas Azocar","SMPL-12567"],["Maria Ximena Estévez Rivas","SMPL-12575"],["Karina Otilia Pradenas Saldias","SMPL-12583"],
+["Claudia Ferrando Yañez","SMPL-12598"],["Samuel Segundo Leyton Ayala","SMPL-12614"],["Jaime Aravena Vidal","SMPL-12615"],
+["Karem Valderrama Silva","SMPL-12616"],["Paulina Negron Diez","SMPL-12639"],["Carlos Cabrera Vergara","SMPL-12663"],
+["Blanca Cofre Urroz","SMPL-12665"],["Alba Yañez Vargas","SMPL-13335"],["Vera Scholz Hoss","SMPL-14034"],
+["Carlos Mattig Mora","SMPL-14035"],["Roberto Guevara","SMPL-14036"],["Nicole Bravo Bravo","SMPL-14037"],
+["Hector Zuleta Vega","SMPL-14045"],["Elvira Osorio","SMPL-14046"],["Cristian Ulloa Muñoz","SMPL-14047"],
+["Cecilia Quiroga Muñoz","SMPL-14055"],["Patricia Gallegos Martinez","SMPL-14063"],["Modesta Vargas Baeza","SMPL-14071"],
+["Leontina Ruth Mora Muñoz","SMPL-14073"],["Enrique Alvarez Palma","SMPL-14082"],["MARIA RAQUEL SANTIS MORAGA","SMPL-14092"],
+["Jorge Manuel Rodríguez Lima","SMPL-14100"],["Martina Sáez Sáez","SMPL-14108"],["Maria Cecilia Tocornal Vial","SMPL-14116"],
+["Myriam Ramirez Videla","SMPL-14118"],["Amanda Leiva Monroy","SMPL-14127"],["Carolina Marcela Gálvez Bugueño","SMPL-14129"],
+["Maria Soledad Merino Marin","SMPL-14130"],["Margarita Alejandra Rosenblut","SMPL-14141"],["Adela Orellana Veas","SMPL-14149"]
+].map(p=>({name:p[0], taskId:p[1]}));
+
+function renderPatientList(filter){
+  const list = document.getElementById('patList');
+  const f = (filter||'').toLowerCase().trim();
+  const selectedIds = pacientesSeleccionados.map(p=>p.taskId).filter(Boolean);
+  if(!f){ list.innerHTML=''; list.style.display='none'; return; }
+  const matches = PATIENTS_SNAPSHOT.filter(p=>{
+    if(p.taskId && selectedIds.includes(p.taskId)) return false;
+    return p.name.toLowerCase().includes(f) || p.taskId.toLowerCase().includes(f);
+  }).slice(0,25);
+  list.style.display = 'block';
+  if(matches.length === 0){
+    list.innerHTML = '<div class="pat-empty">Sin coincidencias en el snapshot de ClickUp. Agrégalo abajo como paciente no listado.</div>';
+    return;
+  }
+  list.innerHTML = matches.map(p=>
+    `<div class="pat-item" data-taskid="${p.taskId}" data-name="${escapeHtml(p.name)}"><span>${escapeHtml(p.name)}</span><span class="tid">${p.taskId}</span></div>`
+  ).join('');
+}
+document.getElementById('patSearch').addEventListener('input', (e)=> renderPatientList(e.target.value));
+document.getElementById('patList').addEventListener('click', (e)=>{
+  const item = e.target.closest('.pat-item');
+  if(!item) return;
+  pacientesSeleccionados.push({name:item.dataset.name, taskId:item.dataset.taskid});
+  document.getElementById('patSearch').value = '';
+  renderPatientList('');
+  renderSelectedPatients();
+});
+document.getElementById('btnAddPatManual').addEventListener('click', ()=>{
+  const input = document.getElementById('patManual');
+  const name = input.value.trim();
+  if(!name){ showToast('Escribe el nombre del paciente antes de agregar.'); return; }
+  pacientesSeleccionados.push({name, taskId:''});
+  input.value = '';
+  renderSelectedPatients();
+});
+function renderSelectedPatients(){
+  const box = document.getElementById('patSelected');
+  box.innerHTML = pacientesSeleccionados.map((p,i)=>
+    `<span class="pat-chip">${escapeHtml(p.name)}${p.taskId ? ' · '+p.taskId : ''}<button type="button" data-idx="${i}" aria-label="Quitar">×</button></span>`
+  ).join('');
+}
+document.getElementById('patSelected').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-idx]');
+  if(!btn) return;
+  pacientesSeleccionados.splice(Number(btn.dataset.idx), 1);
+  renderSelectedPatients();
+});
+
+// ---------------- UI general ----------------
+function currentTransportista(){ return document.querySelector('input[name=transportista]:checked').value; }
+function syncTransportUI(){
+  const t = currentTransportista();
+  document.getElementById('labelDAE').classList.toggle('active', t === 'DAE Transportes');
+  document.getElementById('labelLoimex').classList.toggle('active', t === 'Loimex');
+  if(!emailField.dataset.userEdited) emailField.value = defaultEmails[t] || '';
+  if(!phoneField.dataset.userEdited) phoneField.value = defaultPhones[t] || '';
+  document.getElementById('daeSurcharges').style.display = (t === 'DAE Transportes') ? 'flex' : 'none';
+  updateTarifaChips();
+  renderRecargos();
+}
+document.querySelectorAll('input[name=transportista]').forEach(r=>r.addEventListener('change', syncTransportUI));
+emailField.addEventListener('input', ()=>{ emailField.dataset.userEdited = "1"; });
+phoneField.addEventListener('input', ()=>{ phoneField.dataset.userEdited = "1"; });
+
+document.getElementById('incluirCC').addEventListener('change', (e)=>{
+  document.getElementById('ccField').style.display = e.target.checked ? 'flex' : 'none';
+});
+
+document.getElementById('aplicaPaciente').addEventListener('change', (e)=>{
+  document.getElementById('pacienteBlock').style.display = e.target.checked ? 'block' : 'none';
+  if(!e.target.checked){
+    pacientesSeleccionados = [];
+    renderSelectedPatients();
+    document.getElementById('patSearch').value = '';
+    renderPatientList('');
+  }
+});
+
+document.getElementById('fechaSolicitud').valueAsDate = new Date();
+document.getElementById('fechaViaje').valueAsDate = new Date();
+
+['origenSelect','destinoSelect'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', (e)=>{
+    const otroInput = document.getElementById(id.replace('Select','Otro'));
+    otroInput.style.display = e.target.value === 'Otro' ? 'block' : 'none';
+    toggleZonaLasCondes();
+    updateTarifaChips();
+  });
+});
+document.getElementById('zonaLasCondes').addEventListener('change', updateTarifaChips);
+
+function toggleZonaLasCondes(){
+  const origen = document.getElementById('origenSelect').value;
+  const destino = document.getElementById('destinoSelect').value;
+  const needsZona = LOIMEX_LC_LOCATIONS.includes(origen) || LOIMEX_LC_LOCATIONS.includes(destino);
+  document.getElementById('tramoLCField').style.display = needsZona ? 'block' : 'none';
+}
+
+function getDaePrice(loc){ return DAE_PRICES[loc] || null; }
+function getLoimexPrice(loc, zona){
+  if(LOIMEX_FIXED_PRICES[loc]) return LOIMEX_FIXED_PRICES[loc];
+  if(LOIMEX_LC_LOCATIONS.includes(loc) && zona) return LOIMEX_ZONE_PRICES[zona];
+  return null;
+}
+function updateTarifaChips(){
+  const origen = document.getElementById('origenSelect').value;
+  const destino = document.getElementById('destinoSelect').value;
+  const zona = document.getElementById('zonaLasCondes').value;
+  const chipsBox = document.getElementById('tarifaChips');
+  const seen = new Set();
+  const chips = [];
+  [origen, destino].forEach(loc=>{
+    if(!loc || loc === 'Otro') return;
+    const dae = getDaePrice(loc);
+    if(dae && !seen.has('DAE'+dae)){ seen.add('DAE'+dae); chips.push({label:`DAE · ${loc} — ${fmtCLP(dae)}`, amount:dae, t:'DAE Transportes'}); }
+    const loimex = getLoimexPrice(loc, zona);
+    if(loimex && !seen.has('LOIMEX'+loimex)){ seen.add('LOIMEX'+loimex); chips.push({label:`Loimex · ${loc} — ${fmtCLP(loimex)}`, amount:loimex, t:'Loimex'}); }
+  });
+  if(chips.length === 0){
+    chipsBox.innerHTML = '<span style="font-style:italic;">Sin tarifa de referencia para esta combinación — ingresa el valor manualmente.</span>';
+    return;
+  }
+  chipsBox.innerHTML = chips.map(c=>`<button type="button" class="btn-tiny" data-amount="${c.amount}" data-t="${c.t}">Usar ${c.label}</button>`).join('');
+}
+document.getElementById('tarifaChips').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-amount]');
+  if(!btn) return;
+  document.getElementById('valor').value = btn.dataset.amount;
+  const radio = document.querySelector(`input[name=transportista][value="${btn.dataset.t}"]`);
+  if(radio && !radio.checked){ radio.checked = true; syncTransportUI(); }
+  showToast('Valor aplicado al formulario.');
+});
+
+function calcularRecargos(){
+  let total = 0; const notas = [];
+  const espera = Number(document.getElementById('esperaMin').value || 0);
+  if(espera > 0){ const r = espera*100; total += r; notas.push('Espera ' + espera + ' min: +' + fmtCLP(r)); }
+  if(currentTransportista() === 'DAE Transportes'){
+    if(document.getElementById('finDeSemana').checked){ total += 1000; notas.push('Fin de semana: +$1.000'); }
+    if(document.getElementById('poderSimple').checked){ total += 2000; notas.push('Poder simple: +$2.000'); }
+  }
+  return {total, notas};
+}
+function renderRecargos(){
+  const {total, notas} = calcularRecargos();
+  const help = document.getElementById('recargoHelp');
+  const btn = document.getElementById('btnSumarRecargos');
+  help.textContent = total > 0 ? ('Recargos calculados: +' + fmtCLP(total) + ' (' + notas.join(' · ') + ')') : 'Sin recargos adicionales por ahora.';
+  btn.disabled = total <= 0;
+}
+['esperaMin'].forEach(id => document.getElementById(id).addEventListener('input', renderRecargos));
+document.getElementById('finDeSemana').addEventListener('change', renderRecargos);
+document.getElementById('poderSimple').addEventListener('change', renderRecargos);
+document.getElementById('btnSumarRecargos').addEventListener('click', ()=>{
+  const {total} = calcularRecargos();
+  if(total <= 0) return;
+  const valorField = document.getElementById('valor');
+  valorField.value = (Number(valorField.value) || 0) + total;
+  document.getElementById('esperaMin').value = '';
+  document.getElementById('finDeSemana').checked = false;
+  document.getElementById('poderSimple').checked = false;
+  renderRecargos();
+  showToast('Recargos sumados al valor del servicio.');
+});
+
+// ---------------- Zapier (dispara la automatización que crea el registro en ClickUp) ----------------
+// Nota: esto hace una llamada de red real desde el navegador al webhook de Zapier.
+// Si estás viendo este archivo dentro de la vista previa de artifacts de Claude.ai, el sandbox puede
+// bloquear la llamada por seguridad. Para que funcione siempre, descarga el archivo y ábrelo directo
+// en tu navegador (doble clic) o súbelo donde normalmente lo usas.
+const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/28584760/4t1e90n/';
+async function enviarAZapier(rec){
+  try{
+    await fetch(ZAPIER_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        'Fecha viaje': rec.fechaViaje,
+        'Hora': rec.horaViaje,
+        'Fecha solicitud': rec.fechaSolicitud,
+        'Transportista': rec.transportista,
+        'Origen': rec.origen === 'Otro' ? rec.origenOtro : rec.origen,
+        'Destino': rec.destino === 'Otro' ? rec.destinoOtro : rec.destino,
+        'Motivo': rec.motivo,
+        'Detalle motivo': rec.motivoDetalle,
+        'Paciente(s)': fmtPacientes(rec.pacientes),
+        'Valor': rec.valor,
+        'Comentarios': rec.comentarios,
+        'Solicitante': rec.solicitante,
+        'Canal': rec.canal,
+        'Estado': rec.estado,
+        'Email destino': rec.canal === 'Email' ? rec.destinoContacto : '',
+        'Telefono destino': rec.canal === 'WhatsApp' ? rec.destinoContacto : '',
+        'CC email': rec.ccEmail || ''
+      })
+    });
+  }catch(err){
+    showToast('Solicitud guardada, pero no se pudo notificar a Zapier (revisa tu conexión o abre el archivo fuera de Claude).');
+  }
+}
+
+// ---------------- Importar CSV histórico ----------------
+function parseCSV(text){
+  text = text.replace(/\r\n/g,'\n').replace(/^\uFEFF/, '');
+  const rows = []; let row = []; let field = ''; let inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){ if(text[i+1] === '"'){ field += '"'; i++; } else { inQuotes = false; } }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else { field += c; }
+    }
+  }
+  if(field.length>0 || row.length>0){ row.push(field); rows.push(row); }
+  if(rows.length === 0) return [];
+  const headers = rows[0];
+  return rows.slice(1).filter(r => r.some(v => v !== '')).map(r=>{
+    const obj = {};
+    headers.forEach((h,idx)=> obj[h] = r[idx] !== undefined ? r[idx] : '');
+    return obj;
+  });
+}
+function mapLocationValue(txt){
+  if(!txt) return {sel:'', otro:''};
+  return LOCATIONS.includes(txt) ? {sel:txt, otro:''} : {sel:'Otro', otro:txt};
+}
+function parsePacientesTexto(txt){
+  if(!txt || txt.trim() === '' || txt.trim().toUpperCase() === 'N/A') return [];
+  return txt.split(';').map(s=>s.trim()).filter(Boolean).map(seg=>{
+    const m = seg.match(/^(.*)\s\(([^)]+)\)$/);
+    if(m){
+      let taskId = m[2].trim();
+      if(taskId.toLowerCase() === 'manual') taskId = '';
+      return {name: m[1].trim(), taskId};
+    }
+    return {name: seg, taskId:''};
+  });
+}
+function buildRecordFromCSVRow(row){
+  const origenMap = mapLocationValue(row['Origen'] || '');
+  const destinoMap = mapLocationValue(row['Destino'] || '');
+  const pacientes = parsePacientesTexto(row['Paciente(s)'] || '');
+  return {
+    id: 'req_import_' + Date.now() + '_' + Math.floor(Math.random()*100000),
+    transportista: row['Transportista'] || 'DAE Transportes',
+    fechaSolicitud: row['Fecha solicitud'] || '',
+    fechaViaje: row['Fecha viaje'] || '',
+    horaViaje: row['Hora'] || '',
+    motivo: row['Motivo'] || 'Otro',
+    motivoDetalle: row['Detalle motivo'] || '',
+    origen: origenMap.sel, origenOtro: origenMap.otro,
+    destino: destinoMap.sel, destinoOtro: destinoMap.otro,
+    aplicaPaciente: pacientes.length > 0,
+    pacientes: pacientes,
+    valor: row['Valor'] || '',
+    comentarios: row['Comentarios'] || '',
+    solicitante: row['Solicitante'] || '',
+    destinoContacto: '',
+    canal: row['Canal'] || 'Email',
+    estado: row['Estado'] || 'Pendiente',
+    fechaAceptacion: row['Fecha aceptación'] || '',
+    fechaRealizado: row['Fecha realizado'] || '',
+    fechaCancelacion: row['Fecha cancelación'] || ''
+  };
+}
+document.getElementById('btnCSVImport').addEventListener('click', ()=> document.getElementById('csvImportInput').click());
+document.getElementById('csvImportInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const rows = parseCSV(text);
+    if(rows.length === 0){ showToast('El CSV no tiene filas para importar.'); e.target.value=''; return; }
+    rows.forEach(row => registros.push(buildRecordFromCSVRow(row)));
+    await saveRegistros();
+    render();
+    showToast(rows.length + ' solicitud(es) importadas desde el CSV.');
+  }catch(err){
+    showToast('No se pudo leer el CSV. Verifica que tenga el mismo formato de exportación.');
+  }
+  e.target.value = '';
+});
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+async function loadRegistros(){
+  try{ const res = await window.storage.get(STORAGE_KEY, false); registros = res ? JSON.parse(res.value) : []; }
+  catch(e){ registros = []; }
+  render();
+}
+async function saveRegistros(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(registros), false); }
+  catch(e){ showToast('No se pudo guardar el registro. Intenta de nuevo.'); }
+}
+function fmtCLP(v){
+  if(v === '' || v === null || v === undefined) return '—';
+  const n = Number(v);
+  if(isNaN(n)) return v;
+  return '$' + n.toLocaleString('es-CL');
+}
+function escapeHtml(str){
+  if(!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function fmtPacientes(pacientes){
+  if(!pacientes || pacientes.length === 0) return '';
+  return pacientes.map(p=> p.taskId ? `${p.name} (${p.taskId})` : `${p.name} (manual)`).join('; ');
+}
+
+const ESTADO_META = {
+  'Pendiente': {cls:'pending', label:'Pendiente'}, 'Aceptado': {cls:'accepted', label:'Aceptado'},
+  'Realizado': {cls:'done', label:'Realizado'}, 'Cancelado': {cls:'cancelled', label:'Cancelado'}
+};
+function estadoPillHtml(estado){ const meta = ESTADO_META[estado] || ESTADO_META['Pendiente']; return `<span class="pill ${meta.cls}">${meta.label}</span>`; }
+function canalPillHtml(canal){
+  if(canal === 'WhatsApp') return '<span class="pill canal-whatsapp">WhatsApp</span>';
+  if(canal === 'Email') return '<span class="pill canal-email">Email</span>';
+  return '—';
+}
+function rowActionsHtml(r){
+  const btns = [];
+  if(r.estado === 'Pendiente'){
+    btns.push(`<button class="btn-ghost" data-action="aceptar" data-id="${r.id}">Aceptar</button>`);
+    btns.push(`<button class="btn-ghost" data-action="cancelar" data-id="${r.id}">Cancelar</button>`);
+  } else if(r.estado === 'Aceptado'){
+    btns.push(`<button class="btn-ghost" data-action="realizado" data-id="${r.id}">Realizado</button>`);
+    btns.push(`<button class="btn-ghost" data-action="cancelar" data-id="${r.id}">Cancelar</button>`);
+  }
+  btns.push(`<button class="btn-ghost" data-action="eliminar" data-id="${r.id}">Eliminar</button>`);
+  return btns.join('');
+}
+
+function render(){
+  const tbody = document.getElementById('tbody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  document.getElementById('rowCount').textContent = registros.length
+    ? registros.length + ' solicitud' + (registros.length === 1 ? '' : 'es') : '';
+  if(registros.length === 0){ tbody.innerHTML=''; emptyMsg.style.display='block'; return; }
+  emptyMsg.style.display = 'none';
+
+  const sorted = [...registros].sort((a,b)=>{
+    const ka = (a.fechaViaje||'9999') + (a.horaViaje||'99:99');
+    const kb = (b.fechaViaje||'9999') + (b.horaViaje||'99:99');
+    return ka.localeCompare(kb);
+  });
+
+  tbody.innerHTML = sorted.map(r=>{
+    const pillClass = r.transportista === 'DAE Transportes' ? 'dae' : 'loimex';
+    const origenTxt = r.origen === 'Otro' ? (r.origenOtro || 'Otro') : r.origen;
+    const destinoTxt = r.destino === 'Otro' ? (r.destinoOtro || 'Otro') : r.destino;
+    const pacientesTxt = fmtPacientes(r.pacientes);
+    return `<tr data-id="${r.id}">
+      <td>${r.fechaViaje || '—'}</td>
+      <td>${r.horaViaje || '—'}</td>
+      <td>${r.fechaSolicitud || '—'}</td>
+      <td><span class="pill ${pillClass}">${r.transportista}</span></td>
+      <td style="max-width:150px;">${escapeHtml(r.motivo) || '—'}</td>
+      <td style="max-width:160px;" title="${escapeHtml(r.motivoDetalle)}">${r.motivoDetalle ? escapeHtml(r.motivoDetalle) : '—'}</td>
+      <td style="max-width:140px;">${escapeHtml(origenTxt) || '—'}</td>
+      <td style="max-width:140px;">${escapeHtml(destinoTxt) || '—'}</td>
+      <td style="max-width:160px;" title="${escapeHtml(pacientesTxt)}">${r.aplicaPaciente ? (escapeHtml(pacientesTxt) || '—') : '<span style="color:var(--muted)">N/A</span>'}</td>
+      <td>${fmtCLP(r.valor)}</td>
+      <td style="max-width:150px;" title="${escapeHtml(r.comentarios)}">${r.comentarios ? escapeHtml(r.comentarios) : '—'}</td>
+      <td>${canalPillHtml(r.canal)}</td>
+      <td>${estadoPillHtml(r.estado)}</td>
+      <td><div class="row-actions">${rowActionsHtml(r)}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('tbody').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const rec = registros.find(r=>r.id === btn.dataset.id);
+  if(!rec) return;
+  const action = btn.dataset.action;
+  if(action === 'aceptar'){ rec.estado='Aceptado'; rec.fechaAceptacion=new Date().toISOString().slice(0,10); }
+  else if(action === 'realizado'){ rec.estado='Realizado'; rec.fechaRealizado=new Date().toISOString().slice(0,10); }
+  else if(action === 'cancelar'){ rec.estado='Cancelado'; rec.fechaCancelacion=new Date().toISOString().slice(0,10); }
+  else if(action === 'eliminar'){ registros = registros.filter(r=>r.id !== btn.dataset.id); }
+  await saveRegistros(); render();
+  if(action==='aceptar') showToast('Servicio marcado como aceptado.');
+  else if(action==='realizado') showToast('Servicio marcado como realizado.');
+  else if(action==='cancelar') showToast('Servicio marcado como cancelado.');
+  else if(action==='eliminar') showToast('Solicitud eliminada del registro.');
+});
+
+function buildMessageText(rec){
+  const lineas = [
+    `Solicitud de viaje de transporte`, ``,
+    `Transportista: ${rec.transportista}`,
+    `Fecha de solicitud: ${rec.fechaSolicitud}`,
+    `Fecha y hora planificada del viaje: ${rec.fechaViaje} ${rec.horaViaje}`,
+    `Motivo del viaje: ${rec.motivo}${rec.motivoDetalle ? ' — ' + rec.motivoDetalle : ''}`,
+    `Origen: ${rec.origen === 'Otro' ? rec.origenOtro : rec.origen}`,
+    `Destino: ${rec.destino === 'Otro' ? rec.destinoOtro : rec.destino}`,
+    `Paciente(s) asociado(s): ${rec.aplicaPaciente ? (fmtPacientes(rec.pacientes) || 'Por confirmar') : 'No aplica'}`,
+    `Valor del servicio: ${rec.valor ? fmtCLP(rec.valor) : 'A confirmar'}`,
+    `Requerimientos especiales / comentarios: ${rec.comentarios ? rec.comentarios : 'Sin observaciones'}`,
+    `Solicitado por: ${rec.solicitante || '—'}`, ``,
+    `Quedamos atentos a la confirmación del servicio.`, `Saludos,`, `${rec.solicitante || ''}`
+  ];
+  return lineas.join('\n');
+}
+
+function readForm(){
+  return {
+    transportista: currentTransportista(),
+    motivo: document.getElementById('motivoSelect').value,
+    motivoDetalle: document.getElementById('motivoDetalle').value.trim(),
+    origen: document.getElementById('origenSelect').value,
+    origenOtro: document.getElementById('origenOtro').value.trim(),
+    destino: document.getElementById('destinoSelect').value,
+    destinoOtro: document.getElementById('destinoOtro').value.trim(),
+    fechaSolicitud: document.getElementById('fechaSolicitud').value,
+    fechaViaje: document.getElementById('fechaViaje').value,
+    horaViaje: document.getElementById('horaViaje').value,
+    aplicaPaciente: document.getElementById('aplicaPaciente').checked,
+    pacientes: [...pacientesSeleccionados],
+    valor: document.getElementById('valor').value,
+    comentarios: document.getElementById('comentarios').value.trim(),
+    solicitante: document.getElementById('solicitante').value.trim(),
+    destinoEmail: emailField.value.trim(),
+    destinoTelefono: phoneField.value.trim(),
+    incluirCC: document.getElementById('incluirCC').checked,
+    ccEmail: document.getElementById('ccEmail').value.trim()
+  };
+}
+function validarBase(f){
+  if(!f.fechaSolicitud || !f.fechaViaje || !f.horaViaje){ showToast('Completa fecha de solicitud, fecha y hora planificada del viaje.'); return false; }
+  if(!f.origen || (f.origen === 'Otro' && !f.origenOtro)){ showToast('Indica el origen del viaje.'); return false; }
+  if(!f.destino || (f.destino === 'Otro' && !f.destinoOtro)){ showToast('Indica el destino del viaje.'); return false; }
+  if(f.aplicaPaciente && f.pacientes.length === 0){ showToast('Agrega al menos un paciente o desmarca la casilla.'); return false; }
+  return true;
+}
+async function crearRegistro(f, canal){
+  const rec = {
+    id: 'req_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+    transportista: f.transportista, fechaSolicitud: f.fechaSolicitud, fechaViaje: f.fechaViaje, horaViaje: f.horaViaje,
+    motivo: f.motivo, motivoDetalle: f.motivoDetalle,
+    origen: f.origen, origenOtro: f.origenOtro, destino: f.destino, destinoOtro: f.destinoOtro,
+    aplicaPaciente: f.aplicaPaciente, pacientes: f.aplicaPaciente ? f.pacientes : [],
+    valor: f.valor, comentarios: f.comentarios, solicitante: f.solicitante,
+    destinoContacto: canal === 'Email' ? f.destinoEmail : f.destinoTelefono,
+    canal: canal, estado: 'Pendiente', fechaAceptacion: '', fechaRealizado: '', fechaCancelacion: ''
+  };
+  registros.push(rec);
+  await saveRegistros();
+  render();
+  return rec;
+}
+
+document.getElementById('btnEnviar').addEventListener('click', async ()=>{
+  const f = readForm();
+  if(!validarBase(f)) return;
+  if(!f.destinoEmail){ showToast('Ingresa el email de destino.'); return; }
+  const rec = await crearRegistro(f, 'Email');
+  rec.ccEmail = f.incluirCC ? f.ccEmail : '';
+  enviarAZapier(rec);
+  const subject = encodeURIComponent(`Solicitud de viaje — ${rec.transportista} — ${rec.fechaViaje} ${rec.horaViaje}`);
+  const body = encodeURIComponent(buildMessageText(rec));
+  let url = `mailto:${encodeURIComponent(f.destinoEmail)}?subject=${subject}&body=${body}`;
+  if(f.incluirCC && f.ccEmail) url += `&cc=${encodeURIComponent(f.ccEmail)}`;
+  window.location.href = url;
+  showToast('Solicitud guardada, notificada a Zapier y correo generado.');
+});
+document.getElementById('btnWhatsapp').addEventListener('click', async ()=>{
+  const f = readForm();
+  if(!validarBase(f)) return;
+  const digits = f.destinoTelefono.replace(/\D/g,'');
+  if(!digits){ showToast('Ingresa el número de WhatsApp de destino (con código de país).'); return; }
+  const rec = await crearRegistro(f, 'WhatsApp');
+  enviarAZapier(rec);
+  const text = encodeURIComponent(buildMessageText(rec));
+  window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
+  showToast('Solicitud guardada, notificada a Zapier y WhatsApp abierto.');
+});
+
+document.getElementById('btnLimpiar').addEventListener('click', ()=>{
+  document.getElementById('motivoDetalle').value = '';
+  document.getElementById('origenSelect').value = '';
+  document.getElementById('destinoSelect').value = '';
+  document.getElementById('origenOtro').value=''; document.getElementById('origenOtro').style.display='none';
+  document.getElementById('destinoOtro').value=''; document.getElementById('destinoOtro').style.display='none';
+  document.getElementById('fechaViaje').valueAsDate = new Date();
+  document.getElementById('horaViaje').value = '';
+  document.getElementById('valor').value = '';
+  document.getElementById('esperaMin').value = '';
+  document.getElementById('finDeSemana').checked = false;
+  document.getElementById('poderSimple').checked = false;
+  document.getElementById('comentarios').value = '';
+  document.getElementById('aplicaPaciente').checked = false;
+  document.getElementById('pacienteBlock').style.display = 'none';
+  pacientesSeleccionados = [];
+  renderSelectedPatients();
+  toggleZonaLasCondes();
+  updateTarifaChips();
+  renderRecargos();
+});
+
+document.getElementById('btnCSV').addEventListener('click', ()=>{
+  if(registros.length === 0){ showToast('No hay solicitudes para exportar.'); return; }
+  const headers = ['Fecha viaje','Hora','Fecha solicitud','Transportista','Motivo','Detalle motivo','Origen','Destino','Paciente(s)','Valor','Comentarios','Solicitante','Canal','Estado','Fecha aceptación','Fecha realizado','Fecha cancelación'];
+  const rows = registros.map(r=>[
+    r.fechaViaje, r.horaViaje, r.fechaSolicitud, r.transportista, r.motivo, r.motivoDetalle,
+    r.origen === 'Otro' ? r.origenOtro : r.origen, r.destino === 'Otro' ? r.destinoOtro : r.destino,
+    r.aplicaPaciente ? fmtPacientes(r.pacientes) : 'N/A',
+    r.valor, r.comentarios, r.solicitante, r.canal, r.estado, r.fechaAceptacion, r.fechaRealizado, r.fechaCancelacion
+  ]);
+  const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(["\uFEFF" + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'registro_solicitudes_viajes.csv'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+syncTransportUI();
+toggleZonaLasCondes();
+updateTarifaChips();
+renderRecargos();
+loadRegistros();
+</script>
+</body>
+</html>
